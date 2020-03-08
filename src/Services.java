@@ -172,6 +172,40 @@ public class Services {
         }
     }
 
+    public void newPIN(String userName, String pin, String logFile)throws IOException{
+        File tempFile = new File("tempFileUpdate.txt");
+        File logInFile = new File(logFile);
+        BufferedReader reader = new BufferedReader(new FileReader(logFile));
+        FileWriter writer = new FileWriter("tempFileUpdate.txt");
+
+        while(!check.isValidPin(pin))
+        {
+            System.out.println();
+            System.out.print("PIN: ");
+            pin = scanner.nextLine();
+        }
+
+        StringBuffer sb=new StringBuffer("");
+        String line;
+        while((line = reader.readLine()) != null) {
+            String[] columns = line.split("\t");
+
+            if(!columns[0].equals(userName.toUpperCase()) )
+            {
+                sb.append(line+"\n");
+            }else {
+                sb.append(line.replace(columns[2],pin));
+                sb.append("\n");
+            }
+        }
+
+        writer.write(sb.toString());
+        writer.close();
+        reader.close();
+
+        logInFile.delete();
+        tempFile.renameTo(logInFile);
+    }
     public void deleteAccount(String userName, String logFile) throws IOException {
         String[] files = {logFile,"TransactionHistory.txt"};
 

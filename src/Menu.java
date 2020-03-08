@@ -23,8 +23,9 @@ public class Menu {
         menu.add("Withdraw Cash        Code: 3");
         menu.add("Pay Bills            Code: 4");
         menu.add("Transaction History  Code: 5");
-        menu.add("Delete Account       Code: 6");
-        menu.add("Exit                 Code: 7");
+        menu.add("Update PIN           Code: 6");
+        menu.add("Delete Account       Code: 7");
+        menu.add("Exit                 Code: 8");
 
         for (String row : menu) {
             System.out.println(row);
@@ -108,6 +109,15 @@ public class Menu {
             }
 
             case 6: {
+                System.out.print(ANSI_GREEN + "\nNew PIN: " + ANSI_RESET);
+                input = scanner.nextLine();
+
+                service.newPIN(username,input,loginFile);
+                System.out.println(ANSI_GREEN + "\nYour PIN has been updated.");
+                System.out.println("Session ended." + ANSI_RESET);
+                break;
+            }
+            case 7: {
                 System.out.print("Are you sure that you want to delete this account? (Y/N) ");
                 input = scanner.nextLine();
 
@@ -125,7 +135,7 @@ public class Menu {
                 break;
             }
 
-            case 7: {
+            case 8: {
                 System.out.println("Thank you!");
                 System.out.println("Session ended");
                 break;

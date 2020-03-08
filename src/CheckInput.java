@@ -117,7 +117,7 @@ public class CheckInput {
     public boolean isValidMenuCode(String option){
         try{
             int code = Integer.parseInt(option);
-            if(code <1 || code >7)
+            if(code <1 || code >8)
             {
                 System.out.println(RED_BOLD + "Not a valid code." + ANSI_RESET);
                 return false;
