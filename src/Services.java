@@ -25,13 +25,13 @@ public class Services {
 
         System.out.println();
         System.out.print("User Name: ");
-        userName =  scanner.nextLine();
+        userName =  scanner.nextLine().toUpperCase();
 
         while(check.userNameExists(userName,outfile))
         {
             System.out.println();
             System.out.print("User Name: ");
-            userName =  scanner.nextLine();
+            userName =  scanner.nextLine().toUpperCase();
         }
 
         System.out.print("IBAN: ");
@@ -54,8 +54,7 @@ public class Services {
             PIN = scanner.nextLine();
         }
 
-
-        Files.write(Paths.get(outfile), (userName+"\t"+ IBAN+"\t"+ PIN+"\t").concat("\n").getBytes(), StandardOpenOption.APPEND);
+        Files.write(Paths.get(outfile), (userName+"\t"+ IBAN+"\t"+ PIN).concat("\n").getBytes(), StandardOpenOption.APPEND);
 
         System.out.println();
         System.out.println(ANSI_GREEN + "Your account has been created." + ANSI_RESET);
@@ -206,6 +205,7 @@ public class Services {
         logInFile.delete();
         tempFile.renameTo(logInFile);
     }
+
     public void deleteAccount(String userName, String logFile) throws IOException {
         String[] files = {logFile,"TransactionHistory.txt"};
 

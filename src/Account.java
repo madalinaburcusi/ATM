@@ -11,14 +11,12 @@ public class Account {
         userName = "";
         IBAN = "";
         PIN = "";
-        CVV = "";
     }
 
     public Account(String userName, String iban, String pin, String cvv) {
         this.userName = userName;
         this.IBAN = iban;
         PIN = pin;
-        CVV = cvv;
     }
 
     public void setUserName(String userName){
@@ -40,8 +38,4 @@ public class Account {
     }
     public String getPIN(){ return PIN;}
 
-    public void setCVV(String CVV){ this.CVV =CVV; }
-    public  String getCVV(){
-        return CVV;
-    }
 }

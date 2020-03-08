@@ -76,7 +76,7 @@ public class CheckInput {
                 return true;
             }
          else{
-            System.out.println(RED_BOLD + "Not a valid Card Number." + ANSI_RESET);
+            System.out.println(RED_BOLD + "Not a valid IBAN." + ANSI_RESET);
             return false;
         }
     }
