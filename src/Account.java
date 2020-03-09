@@ -3,7 +3,6 @@ public class Account {
     private String userName;
     private String IBAN;
     private String PIN;
-    private String CVV;
 //    public List<Services> accounts;
 
 
@@ -13,7 +12,7 @@ public class Account {
         PIN = "";
     }
 
-    public Account(String userName, String iban, String pin, String cvv) {
+    public Account(String userName, String iban, String pin) {
         this.userName = userName;
         this.IBAN = iban;
         PIN = pin;
