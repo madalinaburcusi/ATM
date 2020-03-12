@@ -12,14 +12,14 @@ public class Main {
     static CheckInput check = new CheckInput();
     static LogIn log = new LogIn();
     static Scanner scanner = new Scanner(System.in);
-    static Services services = new Services();
+    static AccountServices accountServices = new AccountServices();
 
     public static void main(String[] args) throws IOException {
 
         final String logInFile = "logInFile.txt";
         String userName, PIN;
         String option;
-        int counter = 1;
+        int numberOfLoginTrials = 1;
 
         System.out.println(ANSI_GREEN + "WELCOME!"+ ANSI_RESET);
         System.out.println();
@@ -44,7 +44,7 @@ public class Main {
             System.out.print(ANSI_GREEN + "Enter your option: " + ANSI_RESET);
             option = scanner.nextLine();
 
-            while(!check.isValidLogInCode(option))
+            while(!check.isValidLoginCode(option))
             {
                 System.out.print(ANSI_GREEN + "Enter your option: " + ANSI_RESET);
                 option = scanner.nextLine();
@@ -55,16 +55,16 @@ public class Main {
                 case "1" : {
                     System.out.println();
 
-                    while(log.logIn(userName,PIN,logInFile)== false && counter<3)
+                    while(log.logIn(userName,PIN,logInFile)== false && numberOfLoginTrials<3)
                     {
                         System.out.print(ANSI_GREEN +   "User Name: ");
                         userName = scanner.nextLine();
                         System.out.print(               "PIN: " + ANSI_RESET);
                         PIN = scanner.nextLine();
-                        counter +=1;
+                        numberOfLoginTrials +=1;
                     }
 
-                    if(counter>=3)
+                    if(numberOfLoginTrials>=3)
                     {
                         System.out.println(RED_BOLD + "\nYou have exceeded maximum times of login." + ANSI_RESET);
                         System.out.println(ANSI_GREEN + "Session ended." + ANSI_RESET);
@@ -75,7 +75,7 @@ public class Main {
                 }
 
                 case "2" : {
-                    userName = services.register(logInFile);
+                    userName = accountServices.register(logInFile);
                     break;
                 }
 

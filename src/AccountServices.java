@@ -5,7 +5,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.Scanner;
 
-public class Services {
+public class AccountServices {
 
     public static final String WHITE_UNDERLINED = "\033[4;37m";
     public static final String ANSI_GREEN = "\u001B[32m";
@@ -72,7 +72,7 @@ public class Services {
         while((line = b.readLine()) != null) {
             String[] columns = line.split("\t");
 
-            if(columns[0].equals(userName.toUpperCase()) )
+            if(columns[0].toUpperCase().equals(userName.toUpperCase()) )
             {
                 switch (columns[2])
                 {
@@ -121,7 +121,7 @@ public class Services {
             return false;
         }
         else {
-            if(Long.parseLong(cash) > getCurrentBalance(userName))
+            if(Long.parseLong(cash) > getCurrentBalance(userName.toUpperCase()))
             {
                 System.out.println("Insufficient founds.");
                 return false;
@@ -146,11 +146,13 @@ public class Services {
         else{
             System.out.println();
             System.out.println("You have payed " + amount + " " + currency + " to " + provider.provider + ".");
-            System.out.println(ANSI_GREEN + "Current Balance:    " + getCurrentBalance(userName) + " " + currency + ANSI_RESET);
 
             service = "Billing";
             destination =  provider.provider;
             saveToFile.saveHistory(userName,date.now().toString(), service, destination,String.valueOf(amount), currency);
+
+            System.out.println(ANSI_GREEN + "Current Balance:    " + getCurrentBalance(userName) + " " + currency + ANSI_RESET);
+
         }
     }
 
@@ -165,7 +167,7 @@ public class Services {
         while ((line = b.readLine()) != null) {
             String[] columns = line.split("\t");
 
-            if (columns[0].equals(userName.toUpperCase())) {
+            if (columns[0].toUpperCase().equals(userName.toUpperCase())) {
                 System.out.println(columns[1] + "\t" + columns[2] + "\t" + columns[3]+ "\t" + columns[4] + "\t" + columns[5] );
             }
         }
@@ -189,7 +191,7 @@ public class Services {
         while((line = reader.readLine()) != null) {
             String[] columns = line.split("\t");
 
-            if(!columns[0].equals(userName.toUpperCase()) )
+            if(!columns[0].toUpperCase().equals(userName.toUpperCase()) )
             {
                 sb.append(line+"\n");
             }else {
@@ -220,7 +222,7 @@ public class Services {
 
             while((line = reader.readLine()) != null) {
                 String[] columns = line.split("\t");
-                if (!columns[0].equals(userName.toUpperCase()))
+                if (!columns[0].toUpperCase().equals(userName.toUpperCase()))
                     sb.append(line+"\n");
             }
 

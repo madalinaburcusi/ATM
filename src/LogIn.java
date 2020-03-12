@@ -3,11 +3,10 @@ import java.io.*;
 public class LogIn {
     final String ANSI_GREEN = "\u001B[32m";
     final String ANSI_RESET = "\u001B[0m";
-//    final String RED_BOLD = "\033[1;31m";
 
     CheckInput check = new CheckInput();
 
-    boolean logIn(String userName, String PIN, String logInFile) throws IOException {
+    public boolean logIn(String userName, String PIN, String logInFile) throws IOException {
         File file = new File(logInFile);
 
         if(!file.exists())

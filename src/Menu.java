@@ -8,12 +8,11 @@ public class Menu {
     final String WHITE_UNDERLINED = "\033[4;37m";
     final String ANSI_RESET = "\u001B[0m";
 
-    private Services service = new Services();
+    private AccountServices service = new AccountServices();
     private CheckInput check = new CheckInput();
 
     public void startMenu(String username, String loginFile) throws IOException {
         String option, input;
-        double currentBalance;
 
         System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "MENU" + ANSI_RESET);
 

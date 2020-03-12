@@ -1,11 +1,10 @@
 import java.io.*;
-import java.util.Scanner;
 
 public class CheckInput {
     final String ANSI_GREEN = "\u001B[32m";
     final String ANSI_RESET = "\u001B[0m";
     final String RED_BOLD = "\033[1;31m";
-    int count = 0;
+    int numberOfPinTrials = 0;
 
     public boolean userNameExists(String user, String outfile) throws IOException {
         FileReader f = new FileReader(outfile);
@@ -17,7 +16,7 @@ public class CheckInput {
         while((line = b.readLine()) != null) {
             String[] columns = line.split("\t");
 
-            if(columns[0].equals(user.toUpperCase()) )
+            if(columns[0].toUpperCase().equals(user.toUpperCase()) )
             {
                 System.out.println(RED_BOLD + "\nUser name already exists." + ANSI_RESET);
                 userExists =  true;
@@ -35,15 +34,16 @@ public class CheckInput {
         FileReader f = new FileReader(outfile);
         BufferedReader b = new BufferedReader(f);
 
-        int userPinValid = 0;
+        boolean userValid = false;
+        boolean pinValid = false;
         //Check if the username already exists
         String line;
         while((line = b.readLine()) != null) {
             String[] columns = line.split("\t");
 
-            if(columns[0].equals(user.toUpperCase()) )
+            if(columns[0].toUpperCase().equals(user.toUpperCase()) )
             {
-                userPinValid +=1;
+                userValid = true;
             }
         }
 
@@ -53,26 +53,26 @@ public class CheckInput {
 
         while((line = b1.readLine()) != null) {
             String[] columns = line.split("\t");
-            if (pin.equals(columns[2]))
-                userPinValid +=1;
+            if (pin.equals(columns[2].toUpperCase()))
+                pinValid = true;
 
         }
 
         f1.close();
 
-        if (userPinValid == 2) {
+        if (userValid == true && pinValid == true) {
             return true;
         }else {
-            count++;
-            if(count!=2)
+            numberOfPinTrials++;
+            if(numberOfPinTrials !=2)
                 System.out.println(RED_BOLD + "User or PIN does not exist.\n" + ANSI_RESET);
             return false;
         }
 
     }
 
-    public boolean isValidIBAN(String cardNumber) {
-            if (cardNumber.length() == 24) {
+    public boolean isValidIBAN(String IBAN) {
+            if (IBAN.length() == 24) {
                 return true;
             }
          else{
@@ -84,7 +84,7 @@ public class CheckInput {
     public boolean isValidPin(String pin){
         try {
             int PIN = Integer.parseInt(pin);
-                if (pin.length() != 4) {
+                if (pin.length() != 4 || PIN<0) {
                     System.out.println(RED_BOLD + "Not a valid PIN. 4 numerical digits required." + ANSI_RESET);
                     return false;
                 }
@@ -95,7 +95,7 @@ public class CheckInput {
             }
     }
 
-    public boolean isValidLogInCode(String option){
+    public boolean isValidLoginCode(String option){
         try{
             int code = Integer.parseInt(option);
             if(code <1 || code >3)
@@ -182,18 +182,7 @@ public class CheckInput {
 
     }
 
-    public String validAmount(){
-        Scanner scanner = new Scanner(System.in);
-        String input;
-        System.out.print(ANSI_GREEN + "Amount:      " + ANSI_RESET);
-        input = scanner.nextLine();
 
-        while(!isValidDoubleInput(input)){
-            System.out.print(ANSI_GREEN + "Amount:      " + ANSI_RESET);
-            input = scanner.nextLine();
-        }
-        return input;
-    }
 
 
 }

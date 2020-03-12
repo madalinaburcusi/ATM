@@ -23,7 +23,7 @@ public class Provider {
     Scanner scanner = new Scanner(System.in);
     CheckInput check = new CheckInput();
 
-    public void providerMenu (String userName, Services account) throws IOException {
+    public void providerMenu (String userName, AccountServices account) throws IOException {
         List<Provider> providers = new ArrayList<Provider>();
         System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "\nProviders:" + ANSI_RESET);
         providers.add(new Provider("076","Telecom"));
@@ -47,20 +47,34 @@ public class Provider {
 
         switch(provider){
             case 1 : {
-                double amount = Double.parseDouble(check.validAmount());
+                double amount = Double.parseDouble(getValidAmount());
                 account.payBills(userName,amount,providers.get(0));
                 break;
             }
             case 2 : {
-                double amount = Double.parseDouble(check.validAmount());
+                double amount = Double.parseDouble(getValidAmount());
                 account.payBills(userName,amount,providers.get(1));
                 break;
             }
             case 3 : {
-                double amount = Double.parseDouble(check.validAmount());
+                double amount = Double.parseDouble(getValidAmount());
                 account.payBills(userName,amount,providers.get(2));
                 break;
             }
         }
     }
+
+    public String getValidAmount(){
+        Scanner scanner = new Scanner(System.in);
+        String input;
+        System.out.print(ANSI_GREEN + "Amount:      " + ANSI_RESET);
+        input = scanner.nextLine();
+
+        while(!check.isValidDoubleInput(input)){
+            System.out.print(ANSI_GREEN + "Amount:      " + ANSI_RESET);
+            input = scanner.nextLine();
+        }
+        return input;
+    }
+
 }
