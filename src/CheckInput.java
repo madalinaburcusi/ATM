@@ -53,20 +53,20 @@ public class CheckInput {
 
         while((line = b1.readLine()) != null) {
             String[] columns = line.split("\t");
-            if (pin.equals(columns[2].toUpperCase()))
+            if (pin.equals(columns[2]))
                 pinValid = true;
 
         }
 
         f1.close();
 
-        if (userValid == true && pinValid == true) {
-            return true;
-        }else {
+        if (userValid == false || pinValid == false) {
             numberOfPinTrials++;
             if(numberOfPinTrials !=2)
                 System.out.println(RED_BOLD + "User or PIN does not exist.\n" + ANSI_RESET);
             return false;
+        }else {
+            return true;
         }
 
     }

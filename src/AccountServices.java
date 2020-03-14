@@ -121,7 +121,7 @@ public class AccountServices {
             return false;
         }
         else {
-            if(Long.parseLong(cash) > getCurrentBalance(userName.toUpperCase()))
+            if(Long.parseLong(cash) > getCurrentBalance(userName))
             {
                 System.out.println("Insufficient founds.");
                 return false;
