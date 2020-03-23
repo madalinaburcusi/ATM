@@ -1,3 +1,6 @@
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+
 import java.io.*;
 
 public class LogIn {
@@ -6,13 +9,8 @@ public class LogIn {
 
     CheckInput check = new CheckInput();
 
-    public boolean logIn(String userName, String PIN, String logInFile) throws IOException {
-        File file = new File(logInFile);
-
-        if(!file.exists())
-            file.createNewFile();
-
-        if(!check.isUserPinValid(userName, PIN, logInFile))
+    public boolean logIn(String userName, String PIN, MongoCollection<Document> credentials) throws IOException {
+        if(!check.isUserPinValid(userName, PIN, credentials))
         {
             return false;
         }
