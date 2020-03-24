@@ -15,7 +15,7 @@ public class Menu {
 
     public void startMenu(String username, MongoCollection<Document> credentials, MongoCollection<Document> transactions) {
         String option, input;
-
+        String backToMenuQuest = ANSI_GREEN + "\nBack to MENU? (Y/ any other key for No)" + ANSI_RESET;
         System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "MENU" + ANSI_RESET);
 
         List<String> menu = new ArrayList<String>();
@@ -51,7 +51,7 @@ public class Menu {
                 System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "\nCurrent Balance" + ANSI_RESET);
 
                 System.out.println(String.format("%.2f",service.getCurrentBalance(username,transactions)) + " " + service.currency);
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
                 backToMenu(username,input,credentials,transactions);
                 break;
@@ -63,7 +63,7 @@ public class Menu {
                 System.out.println(cancelTransaction);
                 service.depositCash(username,transactions);
 
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
                 backToMenu(username,input,credentials,transactions);
                 break;
@@ -74,7 +74,7 @@ public class Menu {
                 System.out.println(cancelTransaction);
                 service.withdrawCash(username,transactions);
 
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
                 backToMenu(username,input,credentials,transactions);
                 break;
@@ -85,7 +85,7 @@ public class Menu {
                 Provider provider = new Provider();
                 provider.providerMenu(username,service,transactions);
 
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
                 backToMenu(username,input,credentials,transactions);
                 break;
@@ -94,7 +94,7 @@ public class Menu {
             case 5: {
                 service.showHistory(username,transactions);
 
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
                 backToMenu(username,input,credentials,transactions);
 
@@ -111,7 +111,7 @@ public class Menu {
                 break;
             }
             case 7: {
-                System.out.print("Are you sure that you want to delete this account? (Y/N) ");
+                System.out.print("Are you sure that you want to delete this account? (Y/ any other key for No) ");
                 input = scanner.nextLine();
 
                 if(input.toUpperCase().equals("Y")) {
