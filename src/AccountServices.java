@@ -1,33 +1,57 @@
+import com.mongodb.Block;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.Scanner;
+
+import static com.mongodb.client.model.Filters.eq;
 
 public class AccountServices {
 
     public static final String WHITE_UNDERLINED = "\033[4;37m";
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_RESET = "\u001B[0m";
+    public static final String RED_BOLD = "\033[1;31m";
 
     final String currency = "RON";
 
     String service,destination;
     private CheckInput check = new CheckInput();
-    private HistorySaver saveToFile = new HistorySaver();
+    private HistorySaver saveToDB = new HistorySaver();
     private Scanner scanner = new Scanner(System.in);
+    ObjectMapper objectMapper = new ObjectMapper();
 
     LocalDate date;
 
-    public String register(String outfile) throws IOException {
+    public String getValidCash(){
+        Scanner scanner = new Scanner(System.in);
+        String input;
+        System.out.print(ANSI_GREEN + "Amount:      " + ANSI_RESET);
+        input = scanner.nextLine();
+        if(input.toUpperCase().equals("CANCEL"))
+            input = "0";
+
+        while(!check.isValidLongInput(input)){
+            System.out.print(ANSI_GREEN + "Amount:      " + ANSI_RESET);
+            input = scanner.nextLine();
+            if(input.toUpperCase().equals("CANCEL"))
+                input = "0";
+        }
+        return input;
+    }
+
+    public String register(MongoCollection<Document> credentials,MongoCollection<Document> accountDetails) {
         String IBAN, PIN, userName;
 
         System.out.println();
         System.out.print("User Name: ");
         userName =  scanner.nextLine().toUpperCase();
 
-        while(check.userNameExists(userName,outfile))
+        while(check.userNameExists(userName, credentials))
         {
             System.out.println();
             System.out.print("User Name: ");
@@ -54,7 +78,14 @@ public class AccountServices {
             PIN = scanner.nextLine();
         }
 
-        Files.write(Paths.get(outfile), (userName+"\t"+ IBAN+"\t"+ PIN).concat("\n").getBytes(), StandardOpenOption.APPEND);
+        Document doc = new Document("userName",userName)
+                .append("IBAN", IBAN)
+                .append("PIN", PIN);
+        credentials.insertOne(doc);
+
+        //Initialize current balance of the account
+        doc = new Document("userName",userName).append("currentBalance", 0);
+        accountDetails.insertOne(doc);
 
         System.out.println();
         System.out.println(ANSI_GREEN + "Your account has been created." + ANSI_RESET);
@@ -62,47 +93,36 @@ public class AccountServices {
         return userName;
     }
 
-    public double getCurrentBalance(String userName) throws IOException {
-        double currentBalance = 0;
-        File file = new File("TransactionHistory.txt");
-        FileReader f = new FileReader(file);
-        BufferedReader b = new BufferedReader(f);
+    public double getCurrentBalance(String userName, MongoCollection <Document> accountDetails) {
+        String details;
+        double currentBalance;
 
-        String line;
-        while((line = b.readLine()) != null) {
-            String[] columns = line.split("\t");
-
-            if(columns[0].toUpperCase().equals(userName.toUpperCase()) )
-            {
-                switch (columns[2])
-                {
-                    case "WITHDRAW" : {
-                        currentBalance -= Double.parseDouble(columns[4]);
-                        break;
-                    }
-
-                    case "DEPOSIT" : {
-                        currentBalance += Double.parseDouble(columns[4]);
-                        break;
-                    }
-
-                    case "BILLING" : {
-                        currentBalance -= Double.parseDouble(columns[4]);
-                        break;
-                    }
-                }
-            }
-
+        Document myDoc = accountDetails.find(eq("userName", userName.toUpperCase())).first();
+        if(myDoc == null)
+        {
+            myDoc = new Document("userName",userName.toUpperCase())
+                    .append("currentBalance", 0);
+            accountDetails.insertOne(myDoc);
+            currentBalance = 0;
         }
-        f.close();
-
+        else {
+            details = myDoc.toJson();
+            JsonNode jsonNode = null;
+            try {
+                jsonNode = objectMapper.readTree(details);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            currentBalance = Double.parseDouble(jsonNode.get("currentBalance").asText());
+        }
         return currentBalance;
     }
 
-    public boolean depositCash(String userName, String cash) throws IOException {
-        if(!check.isValidLongInput(cash))
+    public void depositCash(String userName, MongoCollection<Document>transactions, MongoCollection <Document> accountDetails) {
+        long cash = Long.parseLong(getValidCash());
+        if(cash == 0)
         {
-            return false;
+            System.out.println(ANSI_GREEN + "The transaction was canceled." + ANSI_RESET);
         }
         else {
             System.out.println();
@@ -110,129 +130,102 @@ public class AccountServices {
 
             destination = "debit account";
             service = "deposit";
-            saveToFile.saveHistory(userName,date.now().toString(), service, destination, cash, currency);
-            return true;
+            saveToDB.saveHistory(userName,date.now().toString(), service, destination, String.valueOf(cash), currency,transactions);
+
+            accountDetails.updateOne(eq("userName", userName.toUpperCase()),
+                    new Document("$set", new Document("userName", userName.toUpperCase()).append("currentBalance",
+                            getCurrentBalance(userName, accountDetails) + cash)));
         }
     }
 
-    public boolean withdrawCash(String userName,String cash) throws IOException {
-        if(!check.isValidLongInput(cash))
+    public void withdrawCash(String userName,MongoCollection<Document>transactions,MongoCollection<Document>accountDetails) {
+        long cash = Long.parseLong(getValidCash());
+        if(cash == 0)
         {
-            return false;
+            System.out.println(ANSI_GREEN + "The transaction was canceled." + ANSI_RESET);
         }
-        else {
-            if(Long.parseLong(cash) > getCurrentBalance(userName))
+        else if(cash > getCurrentBalance(userName,accountDetails))
             {
-                System.out.println("Insufficient founds.");
-                return false;
+            System.out.println(RED_BOLD + "Insufficient founds." + ANSI_RESET);
             }
-            else{
+        else
+            {
                 System.out.println();
                 System.out.println("You have withdrawn " + cash + " " + currency + " from the current account.");
 
                 destination = "cash";
                 service = "withdraw";
-                saveToFile.saveHistory(userName,date.now().toString(), service, destination,cash, currency);
+                saveToDB.saveHistory(userName,date.now().toString(), service, destination,String.valueOf(cash), currency,transactions);
 
-                return true;
+                accountDetails.updateOne(eq("userName", userName.toUpperCase()),
+                        new Document("$set", new Document("userName", userName.toUpperCase()).append("currentBalance",
+                                getCurrentBalance(userName, accountDetails) - cash)));
             }
-        }
-
     }
 
-    public void payBills(String userName,double amount, Provider provider) throws IOException {
-        if(amount > getCurrentBalance(userName))
+    public void payBills(String userName, double amount, Provider provider, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
+        if(amount > getCurrentBalance(userName,accountDetails))
+        {
             System.out.println("Insufficient founds.");
+        }
         else{
             System.out.println();
-            System.out.println("You have payed " + amount + " " + currency + " to " + provider.provider + ".");
+            System.out.println("You have payed " + String.format("%.2f",amount) + " " + currency + " to " + provider.provider + ".");
 
             service = "Billing";
             destination =  provider.provider;
-            saveToFile.saveHistory(userName,date.now().toString(), service, destination,String.valueOf(amount), currency);
+            saveToDB.saveHistory(userName,date.now().toString(), service, destination,String.valueOf(amount), currency,transactions);
 
-            System.out.println(ANSI_GREEN + "Current Balance:    " + getCurrentBalance(userName) + " " + currency + ANSI_RESET);
+            accountDetails.updateOne(eq("userName", userName.toUpperCase()),
+                    new Document("$set", new Document("userName", userName.toUpperCase()).append("currentBalance",
+                            getCurrentBalance(userName, accountDetails) - amount)));
+
+            System.out.println(ANSI_GREEN + "Current Balance:    " + String.format("%.2f",getCurrentBalance(userName,accountDetails)) + " " + currency + ANSI_RESET);
 
         }
     }
 
-    public void showHistory(String userName) throws IOException {
-        File file = new File("TransactionHistory.txt");
-        FileReader f = new FileReader(file);
-        BufferedReader b = new BufferedReader(f);
+    public void showHistory(String userName,MongoCollection<Document> transactions) {
 
         System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "\nTransaction history" + ANSI_RESET);
 
-        String line;
-        while ((line = b.readLine()) != null) {
-            String[] columns = line.split("\t");
+        Block<Document> printBlock = new Block<Document>() {
+            @Override
+            public void apply(final Document document) {
+                String jsonHistory = document.toJson();
+                JsonNode jsonNode = null;
 
-            if (columns[0].toUpperCase().equals(userName.toUpperCase())) {
-                System.out.println(columns[1] + "\t" + columns[2] + "\t" + columns[3]+ "\t" + columns[4] + "\t" + columns[5] );
+                try {
+                    jsonNode = objectMapper.readTree(jsonHistory);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                String split = "            ";
+                String split1 = "                ";
+                System.out.println(jsonNode.get("DATE").asText() + "\t" +
+                                jsonNode.get("SERVICE").asText() + split.substring(jsonNode.get("SERVICE").asText().length())+
+                                jsonNode.get("DESTINATION").asText()+ split1.substring(jsonNode.get("DESTINATION").asText().length())+
+                                String.format("%.2f",Double.parseDouble(jsonNode.get("AMOUNT").asText())) + split.substring(String.format("%.2f",Double.parseDouble(jsonNode.get("AMOUNT").asText())).length())+
+                                jsonNode.get("CURRENCY").asText());
             }
-        }
+        };
+        transactions.find(eq("userName", userName)).forEach(printBlock);
     }
 
-    public void newPIN(String userName, String pin, String logFile)throws IOException{
-        File tempFile = new File("tempFileUpdate.txt");
-        File logInFile = new File(logFile);
-        BufferedReader reader = new BufferedReader(new FileReader(logFile));
-        FileWriter writer = new FileWriter("tempFileUpdate.txt");
-
+    public void newPIN(String userName, String pin, MongoCollection<Document> credentials){
         while(!check.isValidPin(pin))
         {
             System.out.println();
             System.out.print("PIN: ");
             pin = scanner.nextLine();
         }
-
-        StringBuffer sb=new StringBuffer("");
-        String line;
-        while((line = reader.readLine()) != null) {
-            String[] columns = line.split("\t");
-
-            if(!columns[0].toUpperCase().equals(userName.toUpperCase()) )
-            {
-                sb.append(line+"\n");
-            }else {
-                sb.append(line.replace(columns[2],pin));
-                sb.append("\n");
-            }
-        }
-
-        writer.write(sb.toString());
-        writer.close();
-        reader.close();
-
-        logInFile.delete();
-        tempFile.renameTo(logInFile);
+        credentials.updateOne(eq("userName", userName.toUpperCase()), new Document("$set", new Document("userName", userName.toUpperCase()).append("PIN", pin)));
     }
 
-    public void deleteAccount(String userName, String logFile) throws IOException {
-        String[] files = {logFile,"TransactionHistory.txt"};
-
-        for(String file: files){
-            File tempFile = new File("tempFile.txt");
-            File logInFile = new File(file);
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            FileWriter writer = new FileWriter("tempFile.txt");
-
-            StringBuffer sb=new StringBuffer("");
-            String line;
-
-            while((line = reader.readLine()) != null) {
-                String[] columns = line.split("\t");
-                if (!columns[0].toUpperCase().equals(userName.toUpperCase()))
-                    sb.append(line+"\n");
-            }
-
-            writer.write(sb.toString());
-            writer.close();
-            reader.close();
-
-            logInFile.delete();
-            tempFile.renameTo(logInFile);
+    public void deleteAccount(String userName, MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
+        credentials.deleteOne(eq("userName", userName.toUpperCase()));
+        accountDetails.deleteOne(eq("userName", userName.toUpperCase()));
+        transactions.deleteMany(eq("userName", userName.toUpperCase()));
         }
-    }
-
 }

@@ -1,4 +1,6 @@
-import java.io.IOException;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -23,7 +25,7 @@ public class Provider {
     Scanner scanner = new Scanner(System.in);
     CheckInput check = new CheckInput();
 
-    public void providerMenu (String userName, AccountServices account) throws IOException {
+    public void providerMenu (String userName, AccountServices account, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
         List<Provider> providers = new ArrayList<Provider>();
         System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "\nProviders:" + ANSI_RESET);
         providers.add(new Provider("076","Telecom"));
@@ -48,17 +50,17 @@ public class Provider {
         switch(provider){
             case 1 : {
                 double amount = Double.parseDouble(getValidAmount());
-                account.payBills(userName,amount,providers.get(0));
+                account.payBills(userName,amount,providers.get(0),transactions,accountDetails);
                 break;
             }
             case 2 : {
                 double amount = Double.parseDouble(getValidAmount());
-                account.payBills(userName,amount,providers.get(1));
+                account.payBills(userName,amount,providers.get(1),transactions,accountDetails);
                 break;
             }
             case 3 : {
                 double amount = Double.parseDouble(getValidAmount());
-                account.payBills(userName,amount,providers.get(2));
+                account.payBills(userName,amount,providers.get(2),transactions,accountDetails);
                 break;
             }
         }

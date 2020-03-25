@@ -1,64 +1,48 @@
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import static com.mongodb.client.model.Filters. *;
 import java.io.*;
 
 public class CheckInput {
-    final String ANSI_GREEN = "\u001B[32m";
     final String ANSI_RESET = "\u001B[0m";
     final String RED_BOLD = "\033[1;31m";
     int numberOfPinTrials = 0;
 
-    public boolean userNameExists(String user, String outfile) throws IOException {
-        FileReader f = new FileReader(outfile);
-        BufferedReader b = new BufferedReader(f);
+    public boolean userNameExists(String user, MongoCollection<Document> credentials) {
+        Document myDoc = credentials.find(eq("userName", user.toUpperCase())).first();
         boolean userExists = false;
 
         //Check if the username already exists
-        String line;
-        while((line = b.readLine()) != null) {
-            String[] columns = line.split("\t");
-
-            if(columns[0].toUpperCase().equals(user.toUpperCase()) )
-            {
+        if(myDoc != null) {
                 System.out.println(RED_BOLD + "\nUser name already exists." + ANSI_RESET);
                 userExists =  true;
-                break;
-            }else continue;
-
-        }
-
-        f.close();
+            }
 
         return userExists;
     }
 
-    public boolean isUserPinValid(String user,String pin, String outfile) throws IOException {
-        FileReader f = new FileReader(outfile);
-        BufferedReader b = new BufferedReader(f);
-
+    public boolean isUserPinValid(String user, String pin, MongoCollection<Document> credentials) throws IOException {
         boolean userValid = false;
         boolean pinValid = false;
-        //Check if the username already exists
-        String line;
-        while((line = b.readLine()) != null) {
-            String[] columns = line.split("\t");
 
-            if(columns[0].toUpperCase().equals(user.toUpperCase()) )
+        //Check if the username already exists
+        Document myDoc = credentials.find(eq("userName", user.toUpperCase())).first();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        if(myDoc != null) {
+            userValid = true;
+            String jsonUserDetails = myDoc.toJson();
+            JsonNode jsonNode = objectMapper.readTree(jsonUserDetails);
+            String jsonPIN = jsonNode.get("PIN").asText();
+
+            if(jsonPIN.equals(pin))
             {
-                userValid = true;
+                pinValid = true;
             }
         }
-
-        f.close();
-        FileReader f1 = new FileReader(outfile);
-        BufferedReader b1 = new BufferedReader(f1);
-
-        while((line = b1.readLine()) != null) {
-            String[] columns = line.split("\t");
-            if (pin.equals(columns[2]))
-                pinValid = true;
-
-        }
-
-        f1.close();
 
         if (userValid == false || pinValid == false) {
             numberOfPinTrials++;
@@ -136,7 +120,7 @@ public class CheckInput {
     public boolean isValidLongInput(String input){
         try {
             long amount = Long.parseLong(input);
-            if(amount<=0)
+            if(amount<0)
             {
                 System.out.println(RED_BOLD + "Not a valid amount." + ANSI_RESET);
                 return false;

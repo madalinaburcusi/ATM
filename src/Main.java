@@ -1,3 +1,8 @@
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,22 +19,28 @@ public class Main {
     static Scanner scanner = new Scanner(System.in);
     static AccountServices accountServices = new AccountServices();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        MongoClient mongoClient = new MongoClient();
+        MongoDatabase database = mongoClient.getDatabase("ATMdb");
+        MongoCollection<Document> credentials = database.getCollection("credentials");
+        MongoCollection<Document> accountDetails = database.getCollection("accountDetails");
+        MongoCollection<Document> transactions = database.getCollection("transactions");
 
-        final String logInFile = "logInFile.txt";
         String userName, PIN;
         String option;
         int numberOfLoginTrials = 1;
 
+        Thread.sleep(1000);
+        System.out.println();
         System.out.println(ANSI_GREEN + "WELCOME!"+ ANSI_RESET);
         System.out.println();
 
         System.out.print("User Name: ");
-        userName = scanner.nextLine();
+        userName = scanner.nextLine().toUpperCase();
         System.out.print("PIN: ");
         PIN = scanner.nextLine();
 
-        if(log.logIn(userName,PIN,logInFile) == false)
+        if(log.logIn(userName,PIN,credentials) == false)
         {
             List<String> menu = new ArrayList<String>();
             menu.add(ANSI_GREEN +   "Retry         Code: 1");
@@ -55,7 +66,7 @@ public class Main {
                 case "1" : {
                     System.out.println();
 
-                    while(log.logIn(userName,PIN,logInFile)== false && numberOfLoginTrials<3)
+                    while(log.logIn(userName,PIN,credentials)== false && numberOfLoginTrials<3)
                     {
                         System.out.print(ANSI_GREEN +   "User Name: ");
                         userName = scanner.nextLine();
@@ -67,21 +78,48 @@ public class Main {
                     if(numberOfLoginTrials>=3)
                     {
                         System.out.println(RED_BOLD + "\nYou have exceeded maximum times of login." + ANSI_RESET);
-                        System.out.println(ANSI_GREEN + "Session ended." + ANSI_RESET);
-                        System.exit(0);
+                        System.out.println(ANSI_GREEN + "Choose one of the following:" + ANSI_RESET);
+                        System.out.println("\n" + menu.get(1));
+                        System.out.println(menu.get(2));
+
+                        System.out.println();
+                        System.out.print(ANSI_GREEN + "Enter your option: " + ANSI_RESET);
+                        option = scanner.nextLine();
+
+                        while(!check.isValidLoginCode(option))
+                        {
+                            System.out.print(ANSI_GREEN + "Enter your option: " + ANSI_RESET);
+                            option = scanner.nextLine();
+                        }
+
+                        switch(option)
+                        {
+                            case "2" : {
+                                userName = accountServices.register(credentials,accountDetails);
+                                break;
+                            }
+
+                            case "3" : {
+                                System.out.println("Thank you!");
+                                System.out.println("Session ended");
+                                System.exit(0);
+                                break;
+                            }
+                        }
                     }
 
                     break;
                 }
 
                 case "2" : {
-                    userName = accountServices.register(logInFile);
+                    userName = accountServices.register(credentials,accountDetails);
                     break;
                 }
 
                 case "3" : {
                     System.out.println("Thank you!");
                     System.out.println("Session ended");
+                    System.exit(0);
                     break;
                 }
 
@@ -91,7 +129,7 @@ public class Main {
 
         //Menu
         Menu menu = new Menu();
-        menu.startMenu(userName, logInFile);
+        menu.startMenu(userName, credentials, transactions,accountDetails);
 
     }
 

@@ -1,4 +1,6 @@
-import java.io.IOException;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -11,9 +13,9 @@ public class Menu {
     private AccountServices service = new AccountServices();
     private CheckInput check = new CheckInput();
 
-    public void startMenu(String username, String loginFile) throws IOException {
+    public void startMenu(String username, MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
         String option, input;
-
+        String backToMenuQuest = ANSI_GREEN + "\nBack to MENU? (Y/ any other key for No)" + ANSI_RESET;
         System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "MENU" + ANSI_RESET);
 
         List<String> menu = new ArrayList<String>();
@@ -42,67 +44,59 @@ public class Menu {
         }
 
         //Implement menu
+        String cancelTransaction = "Type " + ANSI_GREEN + WHITE_UNDERLINED + "CANCEL" + ANSI_RESET + " or " + ANSI_GREEN + WHITE_UNDERLINED + "0" + ANSI_RESET + " in order to return to MENU!";
         switch(Integer.parseInt(option))
         {
             case 1: {
                 System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "\nCurrent Balance" + ANSI_RESET);
 
-                System.out.println(service.getCurrentBalance(username) + " " + service.currency);
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(String.format("%.2f",service.getCurrentBalance(username,accountDetails)) + " " + service.currency);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
-                backToMenu(username,input,loginFile);
+                backToMenu(username,input,credentials,transactions,accountDetails);
                 break;
             }
 
             case 2: {
                 System.out.println();
-                System.out.print(ANSI_GREEN + "Amount: " + ANSI_RESET);
-                input = scanner.nextLine();
 
-                while(!service.depositCash(username,input)){
-                    System.out.print(ANSI_GREEN + "Amount: " + ANSI_RESET);
-                    input = scanner.nextLine();
-                }
+                System.out.println(cancelTransaction);
+                service.depositCash(username,transactions,accountDetails);
 
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
-                backToMenu(username,input,loginFile);
+                backToMenu(username,input,credentials,transactions,accountDetails);
                 break;
             }
 
             case 3: {
                 System.out.println();
-                System.out.print(ANSI_GREEN + "Amount: " + ANSI_RESET);
-                input = scanner.nextLine();
+                System.out.println(cancelTransaction);
+                service.withdrawCash(username,transactions,accountDetails);
 
-                while(!service.withdrawCash(username,input)){
-                    System.out.print(ANSI_GREEN + "Amount: " + ANSI_RESET);
-                    input = scanner.nextLine();
-                }
-
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
-                backToMenu(username,input,loginFile);
+                backToMenu(username,input,credentials,transactions,accountDetails);
                 break;
             }
 
             case 4: {
 
                 Provider provider = new Provider();
-                provider.providerMenu(username,service);
+                provider.providerMenu(username,service,transactions,accountDetails);
 
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
-                backToMenu(username,input,loginFile);
+                backToMenu(username,input,credentials,transactions,accountDetails);
                 break;
             }
 
             case 5: {
-                service.showHistory(username);
+                service.showHistory(username,transactions);
 
-                System.out.println(ANSI_GREEN + "\nBack to MENU? (Y/N)" + ANSI_RESET);
+                System.out.println(backToMenuQuest);
                 input = scanner.nextLine();
-                backToMenu(username,input,loginFile);
+                backToMenu(username,input,credentials,transactions,accountDetails);
 
                 break;
             }
@@ -111,24 +105,24 @@ public class Menu {
                 System.out.print(ANSI_GREEN + "\nNew PIN: " + ANSI_RESET);
                 input = scanner.nextLine();
 
-                service.newPIN(username,input,loginFile);
+                service.newPIN(username,input,credentials);
                 System.out.println(ANSI_GREEN + "\nYour PIN has been updated.");
                 System.out.println("Session ended." + ANSI_RESET);
                 break;
             }
             case 7: {
-                System.out.print("Are you sure that you want to delete this account? (Y/N) ");
+                System.out.print("Are you sure that you want to delete this account? (Y/ any other key for No) ");
                 input = scanner.nextLine();
 
                 if(input.toUpperCase().equals("Y")) {
                     System.out.println();
-                    service.deleteAccount(username,loginFile);
+                    service.deleteAccount(username,credentials,transactions,accountDetails);
                     System.out.println("Your account has been deleted!");
-                    System.out.println("Session ended");
+                    System.out.println("Session ended.");
                 }else
                 {
                     System.out.println();
-                    backToMenu(username,"Y",loginFile);
+                    backToMenu(username,"Y",credentials,transactions,accountDetails);
                 }
 
                 break;
@@ -136,17 +130,17 @@ public class Menu {
 
             case 8: {
                 System.out.println("Thank you!");
-                System.out.println("Session ended");
+                System.out.println("Session ended.");
                 break;
             }
         }
     }
 
-    public void backToMenu(String username, String input, String logInFile) throws IOException {
+    public void backToMenu(String username, String input,MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document>  accountDetails) {
 
         if(input.toUpperCase().equals("Y")) {
             System.out.println();
-            startMenu(username,logInFile);
+            startMenu(username,credentials,transactions,accountDetails);
         }
         else {
             System.out.println("Thank you!");
