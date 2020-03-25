@@ -23,7 +23,7 @@ public class Main {
         MongoClient mongoClient = new MongoClient();
         MongoDatabase database = mongoClient.getDatabase("ATMdb");
         MongoCollection<Document> credentials = database.getCollection("credentials");
-
+        MongoCollection<Document> accountDetails = database.getCollection("accountDetails");
         MongoCollection<Document> transactions = database.getCollection("transactions");
 
         String userName, PIN;
@@ -95,7 +95,7 @@ public class Main {
                         switch(option)
                         {
                             case "2" : {
-                                userName = accountServices.register(credentials);
+                                userName = accountServices.register(credentials,accountDetails);
                                 break;
                             }
 
@@ -112,7 +112,7 @@ public class Main {
                 }
 
                 case "2" : {
-                    userName = accountServices.register(credentials);
+                    userName = accountServices.register(credentials,accountDetails);
                     break;
                 }
 
@@ -129,7 +129,7 @@ public class Main {
 
         //Menu
         Menu menu = new Menu();
-        menu.startMenu(userName, credentials, transactions);
+        menu.startMenu(userName, credentials, transactions,accountDetails);
 
     }
 

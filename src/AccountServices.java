@@ -23,6 +23,7 @@ public class AccountServices {
     private CheckInput check = new CheckInput();
     private HistorySaver saveToDB = new HistorySaver();
     private Scanner scanner = new Scanner(System.in);
+    ObjectMapper objectMapper = new ObjectMapper();
 
     LocalDate date;
 
@@ -43,7 +44,7 @@ public class AccountServices {
         return input;
     }
 
-    public String register(MongoCollection<Document> credentials) {
+    public String register(MongoCollection<Document> credentials,MongoCollection<Document> accountDetails) {
         String IBAN, PIN, userName;
 
         System.out.println();
@@ -82,51 +83,42 @@ public class AccountServices {
                 .append("PIN", PIN);
         credentials.insertOne(doc);
 
+        //Initialize current balance of the account
+        doc = new Document("userName",userName).append("currentBalance", 0);
+        accountDetails.insertOne(doc);
+
         System.out.println();
         System.out.println(ANSI_GREEN + "Your account has been created." + ANSI_RESET);
         System.out.println();
         return userName;
     }
 
-    public double getCurrentBalance(String userName, MongoCollection <Document> transactions) {
-        final double[] currentBalance = {0};
+    public double getCurrentBalance(String userName, MongoCollection <Document> accountDetails) {
+        String details;
+        double currentBalance;
 
-        Block<Document> balanceBlock = new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                ObjectMapper objectMapper = new ObjectMapper();
-                String jsonHistory = document.toJson();
-                JsonNode jsonNode = null;
-
-                try {
-                    jsonNode = objectMapper.readTree(jsonHistory);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                switch (jsonNode.get("SERVICE").asText())
-                {
-                    case "WITHDRAW" :
-
-                    case "BILLING" : {
-                        currentBalance[0] -= Double.parseDouble(jsonNode.get("AMOUNT").asText());
-                        break;
-                    }
-
-                    case "DEPOSIT" : {
-                        currentBalance[0] += Double.parseDouble(jsonNode.get("AMOUNT").asText());
-                        break;
-                    }
-                }
-
+        Document myDoc = accountDetails.find(eq("userName", userName.toUpperCase())).first();
+        if(myDoc == null)
+        {
+            myDoc = new Document("userName",userName.toUpperCase())
+                    .append("currentBalance", 0);
+            accountDetails.insertOne(myDoc);
+            currentBalance = 0;
+        }
+        else {
+            details = myDoc.toJson();
+            JsonNode jsonNode = null;
+            try {
+                jsonNode = objectMapper.readTree(details);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        };
-
-        transactions.find(eq("userName", userName)).forEach(balanceBlock);
-        return currentBalance[0];
+            currentBalance = Double.parseDouble(jsonNode.get("currentBalance").asText());
+        }
+        return currentBalance;
     }
 
-    public void depositCash(String userName, MongoCollection<Document>transactions) {
+    public void depositCash(String userName, MongoCollection<Document>transactions, MongoCollection <Document> accountDetails) {
         long cash = Long.parseLong(getValidCash());
         if(cash == 0)
         {
@@ -139,16 +131,20 @@ public class AccountServices {
             destination = "debit account";
             service = "deposit";
             saveToDB.saveHistory(userName,date.now().toString(), service, destination, String.valueOf(cash), currency,transactions);
+
+            accountDetails.updateOne(eq("userName", userName.toUpperCase()),
+                    new Document("$set", new Document("userName", userName.toUpperCase()).append("currentBalance",
+                            getCurrentBalance(userName, accountDetails) + cash)));
         }
     }
 
-    public void withdrawCash(String userName,MongoCollection<Document>transactions) {
+    public void withdrawCash(String userName,MongoCollection<Document>transactions,MongoCollection<Document>accountDetails) {
         long cash = Long.parseLong(getValidCash());
         if(cash == 0)
         {
             System.out.println(ANSI_GREEN + "The transaction was canceled." + ANSI_RESET);
         }
-        else if(cash > getCurrentBalance(userName,transactions))
+        else if(cash > getCurrentBalance(userName,accountDetails))
             {
             System.out.println(RED_BOLD + "Insufficient founds." + ANSI_RESET);
             }
@@ -160,11 +156,15 @@ public class AccountServices {
                 destination = "cash";
                 service = "withdraw";
                 saveToDB.saveHistory(userName,date.now().toString(), service, destination,String.valueOf(cash), currency,transactions);
+
+                accountDetails.updateOne(eq("userName", userName.toUpperCase()),
+                        new Document("$set", new Document("userName", userName.toUpperCase()).append("currentBalance",
+                                getCurrentBalance(userName, accountDetails) - cash)));
             }
     }
 
-    public void payBills(String userName, double amount, Provider provider, MongoCollection<Document> transactions) {
-        if(amount > getCurrentBalance(userName,transactions))
+    public void payBills(String userName, double amount, Provider provider, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
+        if(amount > getCurrentBalance(userName,accountDetails))
         {
             System.out.println("Insufficient founds.");
         }
@@ -176,7 +176,11 @@ public class AccountServices {
             destination =  provider.provider;
             saveToDB.saveHistory(userName,date.now().toString(), service, destination,String.valueOf(amount), currency,transactions);
 
-            System.out.println(ANSI_GREEN + "Current Balance:    " + String.format("%.2f",getCurrentBalance(userName,transactions)) + " " + currency + ANSI_RESET);
+            accountDetails.updateOne(eq("userName", userName.toUpperCase()),
+                    new Document("$set", new Document("userName", userName.toUpperCase()).append("currentBalance",
+                            getCurrentBalance(userName, accountDetails) - amount)));
+
+            System.out.println(ANSI_GREEN + "Current Balance:    " + String.format("%.2f",getCurrentBalance(userName,accountDetails)) + " " + currency + ANSI_RESET);
 
         }
     }
@@ -188,7 +192,6 @@ public class AccountServices {
         Block<Document> printBlock = new Block<Document>() {
             @Override
             public void apply(final Document document) {
-                ObjectMapper objectMapper = new ObjectMapper();
                 String jsonHistory = document.toJson();
                 JsonNode jsonNode = null;
 
@@ -220,8 +223,9 @@ public class AccountServices {
         credentials.updateOne(eq("userName", userName.toUpperCase()), new Document("$set", new Document("userName", userName.toUpperCase()).append("PIN", pin)));
     }
 
-    public void deleteAccount(String userName, MongoCollection<Document> credentials, MongoCollection<Document> transactions) {
+    public void deleteAccount(String userName, MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
         credentials.deleteOne(eq("userName", userName.toUpperCase()));
+        accountDetails.deleteOne(eq("userName", userName.toUpperCase()));
         transactions.deleteMany(eq("userName", userName.toUpperCase()));
         }
 }
