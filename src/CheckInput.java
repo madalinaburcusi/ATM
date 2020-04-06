@@ -2,7 +2,6 @@ import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-
 import static com.mongodb.client.model.Filters. *;
 import java.io.*;
 
@@ -10,6 +9,7 @@ public class CheckInput {
     final String ANSI_RESET = "\u001B[0m";
     final String RED_BOLD = "\033[1;31m";
     int numberOfPinTrials = 0;
+    String patternIBAN = "[A-Z]{2} ?\\d{2} ?[A-Z]{4} ?\\d{4} ?\\d{4} ?\\d{4} ?[\\d]{0,2} ?[A-Z]{0,3}";
 
     public boolean userNameExists(String user, MongoCollection<Document> credentials) {
         Document myDoc = credentials.find(eq("userName", user.toUpperCase())).first();
@@ -56,7 +56,7 @@ public class CheckInput {
     }
 
     public boolean isValidIBAN(String IBAN) {
-            if (IBAN.length() == 24) {
+            if (IBAN.matches(patternIBAN)) {
                 return true;
             }
          else{
@@ -69,12 +69,12 @@ public class CheckInput {
         try {
             int PIN = Integer.parseInt(pin);
                 if (pin.length() != 4 || PIN<0) {
-                    System.out.println(RED_BOLD + "Not a valid PIN. 4 numerical digits required." + ANSI_RESET);
+                    System.out.println(RED_BOLD + "Not a valid PIN. 4 digits required." + ANSI_RESET);
                     return false;
                 }
                     return true;
             } catch (Exception e) {
-                System.out.println(RED_BOLD + "Not a valid PIN. 4 numerical digits required." + ANSI_RESET);
+                System.out.println(RED_BOLD + "Not a valid PIN. 4 digits required." + ANSI_RESET);
                 return false;
             }
     }
@@ -150,7 +150,7 @@ public class CheckInput {
     public boolean isValidProviderCode(String option){
         try{
             int code = Integer.parseInt(option);
-            if(code <1 || code >4)
+            if(code <1 || code >3)
             {
                 System.out.println(RED_BOLD + "Not a valid provider code." + ANSI_RESET);
                 return false;
