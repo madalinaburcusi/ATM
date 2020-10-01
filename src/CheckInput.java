@@ -4,6 +4,8 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import static com.mongodb.client.model.Filters. *;
 import java.io.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 public class CheckInput {
     final String ANSI_RESET = "\u001B[0m";
@@ -24,7 +26,7 @@ public class CheckInput {
         return userExists;
     }
 
-    public boolean isUserPinValid(String user, String pin, MongoCollection<Document> credentials) throws IOException {
+    public boolean isUserPinValid(String user, String pin, MongoCollection<Document> credentials) throws IOException, NoSuchProviderException, NoSuchAlgorithmException {
         boolean userValid = false;
         boolean pinValid = false;
 
@@ -37,17 +39,14 @@ public class CheckInput {
             String jsonUserDetails = myDoc.toJson();
             JsonNode jsonNode = objectMapper.readTree(jsonUserDetails);
             String jsonPIN = jsonNode.get("PIN").asText();
-
-            if(jsonPIN.equals(pin))
+            if(jsonPIN.equals(EncryptPass.getHash(pin)))
             {
                 pinValid = true;
             }
         }
 
-        if (userValid == false || pinValid == false) {
+        if (!userValid || !pinValid) {
             numberOfPinTrials++;
-            if(numberOfPinTrials !=2)
-                System.out.println(RED_BOLD + "User or PIN does not exist.\n" + ANSI_RESET);
             return false;
         }else {
             return true;

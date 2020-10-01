@@ -1,6 +1,9 @@
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -13,7 +16,7 @@ public class Menu {
     private AccountServices service = new AccountServices();
     private CheckInput check = new CheckInput();
 
-    public void startMenu(String username, MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
+    public void startMenu(String username, MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
         String option, input;
         String backToMenuQuest = ANSI_GREEN + "\nBack to MENU? (Y/ any other key for No)" + ANSI_RESET;
         System.out.println(WHITE_UNDERLINED + ANSI_GREEN + "MENU" + ANSI_RESET);
@@ -136,7 +139,7 @@ public class Menu {
         }
     }
 
-    public void backToMenu(String username, String input,MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document>  accountDetails) {
+    public void backToMenu(String username, String input,MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document>  accountDetails) throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
 
         if(input.toUpperCase().equals("Y")) {
             System.out.println();
