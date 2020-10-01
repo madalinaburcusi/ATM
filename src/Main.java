@@ -4,6 +4,8 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -19,13 +21,15 @@ public class Main {
     static Scanner scanner = new Scanner(System.in);
     static AccountServices accountServices = new AccountServices();
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, NoSuchProviderException, NoSuchAlgorithmException {
         MongoClient mongoClient = new MongoClient();
         MongoDatabase database = mongoClient.getDatabase("ATMdb");
         MongoCollection<Document> credentials = database.getCollection("credentials");
         MongoCollection<Document> accountDetails = database.getCollection("accountDetails");
         MongoCollection<Document> transactions = database.getCollection("transactions");
-        
+
+        String wrongCredentials = RED_BOLD + "User or PIN does not exist.\n" + ANSI_RESET;
+        String enterOption = ANSI_GREEN + "Enter your option: " + ANSI_RESET;
         String userName, PIN;
         String option;
         int numberOfLoginTrials = 1;
@@ -40,8 +44,9 @@ public class Main {
         System.out.print("PIN: ");
         PIN = scanner.nextLine();
 
-        if(log.logIn(userName,PIN,credentials) == false)
+        if(!log.logIn(userName, PIN, credentials))
         {
+            System.out.println(wrongCredentials);
             List<String> menu = new ArrayList<String>();
             menu.add(ANSI_GREEN +   "Retry         Code: 1");
             menu.add(               "New Account   Code: 2");
@@ -52,12 +57,12 @@ public class Main {
             }
 
             System.out.println();
-            System.out.print(ANSI_GREEN + "Enter your option: " + ANSI_RESET);
+            System.out.print(enterOption);
             option = scanner.nextLine();
 
             while(!check.isValidLoginCode(option))
             {
-                System.out.print(ANSI_GREEN + "Enter your option: " + ANSI_RESET);
+                System.out.print(enterOption);
                 option = scanner.nextLine();
             }
 
@@ -66,8 +71,10 @@ public class Main {
                 case "1" : {
                     System.out.println();
 
-                    while(log.logIn(userName,PIN,credentials)== false && numberOfLoginTrials<3)
+                    while(!log.logIn(userName, PIN, credentials) && numberOfLoginTrials<3)
                     {
+                        if(numberOfLoginTrials !=1)
+                            System.out.println(wrongCredentials);
                         System.out.print(ANSI_GREEN +   "User Name: ");
                         userName = scanner.nextLine();
                         System.out.print(               "PIN: " + ANSI_RESET);
@@ -75,20 +82,21 @@ public class Main {
                         numberOfLoginTrials +=1;
                     }
 
-                    if(numberOfLoginTrials>=3)
+                    if(!log.logIn(userName, PIN, credentials) && numberOfLoginTrials==3)
                     {
-                        System.out.println(RED_BOLD + "\nYou have exceeded maximum times of login." + ANSI_RESET);
+                        System.out.println(wrongCredentials);
+                        System.out.println(RED_BOLD + "You have exceeded maximum times of login." + ANSI_RESET);
                         System.out.println(ANSI_GREEN + "Choose one of the following:" + ANSI_RESET);
                         System.out.println("\n" + menu.get(1));
                         System.out.println(menu.get(2));
 
                         System.out.println();
-                        System.out.print(ANSI_GREEN + "Enter your option: " + ANSI_RESET);
+                        System.out.print(enterOption);
                         option = scanner.nextLine();
 
                         while(!check.isValidLoginCode(option))
                         {
-                            System.out.print(ANSI_GREEN + "Enter your option: " + ANSI_RESET);
+                            System.out.print(enterOption);
                             option = scanner.nextLine();
                         }
 
@@ -126,6 +134,7 @@ public class Main {
             }
 
         }
+        System.out.println(ANSI_GREEN + "LogIn Succeed!\n" + ANSI_RESET);
 
         //Menu
         Menu menu = new Menu();

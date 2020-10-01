@@ -5,6 +5,8 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.time.LocalDate;
 import java.util.Scanner;
 
@@ -44,7 +46,7 @@ public class AccountServices {
         return input;
     }
 
-    public String register(MongoCollection<Document> credentials,MongoCollection<Document> accountDetails) {
+    public String register(MongoCollection<Document> credentials,MongoCollection<Document> accountDetails) throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
         String IBAN, PIN, userName;
 
         System.out.println();
@@ -80,7 +82,7 @@ public class AccountServices {
 
         Document doc = new Document("userName",userName)
                 .append("IBAN", IBAN)
-                .append("PIN", PIN);
+                .append("PIN", EncryptPass.getHash(PIN));
         credentials.insertOne(doc);
 
         //Initialize current balance of the account
@@ -213,14 +215,14 @@ public class AccountServices {
         transactions.find(eq("userName", userName)).forEach(printBlock);
     }
 
-    public void newPIN(String userName, String pin, MongoCollection<Document> credentials){
+    public void newPIN(String userName, String pin, MongoCollection<Document> credentials) throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
         while(!check.isValidPin(pin))
         {
             System.out.println();
             System.out.print("PIN: ");
             pin = scanner.nextLine();
         }
-        credentials.updateOne(eq("userName", userName.toUpperCase()), new Document("$set", new Document("userName", userName.toUpperCase()).append("PIN", pin)));
+        credentials.updateOne(eq("userName", userName.toUpperCase()), new Document("$set", new Document("userName", userName.toUpperCase()).append("PIN", EncryptPass.getHash(pin))));
     }
 
     public void deleteAccount(String userName, MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
