@@ -30,7 +30,7 @@ public class Main {
 
         String wrongCredentials = RED_BOLD + "User or PIN does not exist.\n" + ANSI_RESET;
         String enterOption = ANSI_GREEN + "Enter your option: " + ANSI_RESET;
-        String userName, PIN;
+        String userName = "", PIN;
         String option;
         int numberOfLoginTrials = 1;
 
@@ -39,20 +39,12 @@ public class Main {
         System.out.println(ANSI_GREEN + "WELCOME!"+ ANSI_RESET);
         System.out.println();
 
-        System.out.print("User Name: ");
-        userName = scanner.nextLine().toUpperCase();
-        System.out.print("PIN: ");
-        PIN = scanner.nextLine();
+            List<String> menuList = new ArrayList<String>();
+            menuList.add(ANSI_GREEN +   "Log in        Code: 1");
+            menuList.add(               "New Account   Code: 2");
+            menuList.add(               "Exit          Code: 3" + ANSI_RESET);
 
-        if(!log.logIn(userName, PIN, credentials))
-        {
-            System.out.println(wrongCredentials);
-            List<String> menu = new ArrayList<String>();
-            menu.add(ANSI_GREEN +   "Retry         Code: 1");
-            menu.add(               "New Account   Code: 2");
-            menu.add(               "Exit          Code: 3" + ANSI_RESET);
-
-            for (String row : menu) {
+            for (String row : menuList) {
                 System.out.println(row);
             }
 
@@ -71,8 +63,7 @@ public class Main {
                 case "1" : {
                     System.out.println();
 
-                    while(!log.logIn(userName, PIN, credentials) && numberOfLoginTrials<3)
-                    {
+                    do {
                         if(numberOfLoginTrials !=1)
                             System.out.println(wrongCredentials);
                         System.out.print(ANSI_GREEN +   "User Name: ");
@@ -80,15 +71,15 @@ public class Main {
                         System.out.print(               "PIN: " + ANSI_RESET);
                         PIN = scanner.nextLine();
                         numberOfLoginTrials +=1;
-                    }
+                    }while (!log.logIn(userName, PIN, credentials) && numberOfLoginTrials<=3);
 
-                    if(!log.logIn(userName, PIN, credentials) && numberOfLoginTrials==3)
+                    if(!log.logIn(userName, PIN, credentials) && numberOfLoginTrials>3)
                     {
                         System.out.println(wrongCredentials);
                         System.out.println(RED_BOLD + "You have exceeded maximum times of login." + ANSI_RESET);
                         System.out.println(ANSI_GREEN + "Choose one of the following:" + ANSI_RESET);
-                        System.out.println("\n" + menu.get(1));
-                        System.out.println(menu.get(2));
+                        System.out.println("\n" + menuList.get(1));
+                        System.out.println(menuList.get(2));
 
                         System.out.println();
                         System.out.print(enterOption);
@@ -133,7 +124,6 @@ public class Main {
 
             }
 
-        }
         System.out.println(ANSI_GREEN + "LogIn Succeed!\n" + ANSI_RESET);
 
         //Menu

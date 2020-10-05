@@ -81,9 +81,9 @@ public class AccountServices {
         }
 
         Document doc = new Document("userName",userName)
-                .append("IBAN", IBAN)
-                .append("PIN", EncryptPass.getHash(PIN));
+                .append("IBAN", IBAN);
         credentials.insertOne(doc);
+        EncryptPass.setHash(PIN, userName, credentials);
 
         //Initialize current balance of the account
         doc = new Document("userName",userName).append("currentBalance", 0);
@@ -222,7 +222,7 @@ public class AccountServices {
             System.out.print("PIN: ");
             pin = scanner.nextLine();
         }
-        credentials.updateOne(eq("userName", userName.toUpperCase()), new Document("$set", new Document("userName", userName.toUpperCase()).append("PIN", EncryptPass.getHash(pin))));
+        EncryptPass.setHash(pin, userName, credentials);
     }
 
     public void deleteAccount(String userName, MongoCollection<Document> credentials, MongoCollection<Document> transactions, MongoCollection<Document> accountDetails) {
