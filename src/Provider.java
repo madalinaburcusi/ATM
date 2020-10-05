@@ -41,27 +41,31 @@ public class Provider {
         System.out.println();
         System.out.print(ANSI_GREEN + "Choose Provider: " + ANSI_RESET);
         input = scanner.nextLine();
-        while(!check.isValidProviderCode(input)){
-            System.out.print(ANSI_GREEN + "Choose Provider: " + ANSI_RESET);
-            input = scanner.nextLine();
-        }
-        int provider = Integer.parseInt(input);
+        if(input.equals("0") || input.equalsIgnoreCase("cancel"))
+            System.out.println("Operation canceled.");
+        else{
+            while (!check.isValidProviderCode(input)) {
+                System.out.print(ANSI_GREEN + "Choose Provider: " + ANSI_RESET);
+                input = scanner.nextLine();
+            }
+            int provider = Integer.parseInt(input);
 
-        switch(provider){
-            case 1 : {
-                double amount = Double.parseDouble(getValidAmount());
-                account.payBills(userName,amount,providers.get(0),transactions,accountDetails);
-                break;
-            }
-            case 2 : {
-                double amount = Double.parseDouble(getValidAmount());
-                account.payBills(userName,amount,providers.get(1),transactions,accountDetails);
-                break;
-            }
-            case 3 : {
-                double amount = Double.parseDouble(getValidAmount());
-                account.payBills(userName,amount,providers.get(2),transactions,accountDetails);
-                break;
+            switch (provider) {
+                case 1: {
+                    double amount = Double.parseDouble(getValidAmount());
+                    account.payBills(userName, amount, providers.get(0), transactions, accountDetails);
+                    break;
+                }
+                case 2: {
+                    double amount = Double.parseDouble(getValidAmount());
+                    account.payBills(userName, amount, providers.get(1), transactions, accountDetails);
+                    break;
+                }
+                case 3: {
+                    double amount = Double.parseDouble(getValidAmount());
+                    account.payBills(userName, amount, providers.get(2), transactions, accountDetails);
+                    break;
+                }
             }
         }
     }

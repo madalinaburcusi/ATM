@@ -18,7 +18,7 @@ public class AccountServices {
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String RED_BOLD = "\033[1;31m";
-
+    final String operationCanceled = ANSI_GREEN + "The operation was canceled." + ANSI_RESET;
     final String currency = "RON";
 
     String service,destination;
@@ -124,7 +124,7 @@ public class AccountServices {
         long cash = Long.parseLong(getValidCash());
         if(cash == 0)
         {
-            System.out.println(ANSI_GREEN + "The transaction was canceled." + ANSI_RESET);
+            System.out.println(operationCanceled);
         }
         else {
             System.out.println();
@@ -144,7 +144,7 @@ public class AccountServices {
         long cash = Long.parseLong(getValidCash());
         if(cash == 0)
         {
-            System.out.println(ANSI_GREEN + "The transaction was canceled." + ANSI_RESET);
+            System.out.println(operationCanceled);
         }
         else if(cash > getCurrentBalance(userName,accountDetails))
             {

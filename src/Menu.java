@@ -47,7 +47,7 @@ public class Menu {
         }
 
         //Implement menu
-        String cancelTransaction = "Type " + ANSI_GREEN + WHITE_UNDERLINED + "CANCEL" + ANSI_RESET + " or " + ANSI_GREEN + WHITE_UNDERLINED + "0" + ANSI_RESET + " in order to return to MENU!";
+        String cancelOperation = "Type " + ANSI_GREEN + WHITE_UNDERLINED + "CANCEL" + ANSI_RESET + " or " + ANSI_GREEN + WHITE_UNDERLINED + "0" + ANSI_RESET + " in order to CANCEL the operation!";
         switch(Integer.parseInt(option))
         {
             case 1: {
@@ -63,7 +63,7 @@ public class Menu {
             case 2: {
                 System.out.println();
 
-                System.out.println(cancelTransaction);
+                System.out.println(cancelOperation);
                 service.depositCash(username,transactions,accountDetails);
 
                 System.out.println(backToMenuQuest);
@@ -74,7 +74,7 @@ public class Menu {
 
             case 3: {
                 System.out.println();
-                System.out.println(cancelTransaction);
+                System.out.println(cancelOperation);
                 service.withdrawCash(username,transactions,accountDetails);
 
                 System.out.println(backToMenuQuest);
@@ -84,7 +84,7 @@ public class Menu {
             }
 
             case 4: {
-
+                System.out.println(cancelOperation);
                 Provider provider = new Provider();
                 provider.providerMenu(username,service,transactions,accountDetails);
 
