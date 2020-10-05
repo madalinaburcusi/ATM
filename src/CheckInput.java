@@ -39,7 +39,7 @@ public class CheckInput {
             String jsonUserDetails = myDoc.toJson();
             JsonNode jsonNode = objectMapper.readTree(jsonUserDetails);
             String jsonPIN = jsonNode.get("PIN").asText();
-            if(jsonPIN.equals(EncryptPass.getHash(pin)))
+            if(jsonPIN.equals(EncryptPass.getHash(pin,user, credentials)))
             {
                 pinValid = true;
             }
